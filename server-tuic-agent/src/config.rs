@@ -10,7 +10,7 @@ use panel_connect_rpc::IpVersion;
 use serde::{Deserialize, Serialize, de::IgnoredAny};
 use tracing::{level_filters::LevelFilter, warn};
 
-use crate::utils::CongestionController;
+use crate::{config_auto::MaxConnections, utils::CongestionController};
 
 /// Parse IP version string (v4, v6, auto) into IpVersion enum
 fn parse_ip_version(s: &str) -> Result<IpVersion, String> {
@@ -117,6 +117,12 @@ pub struct Cli {
 		value_parser = parse_ip_version,
 	)]
 	pub panel_ip_version: IpVersion,
+
+	/// Maximum concurrent QUIC connections. Use 'auto' to derive a sensible
+	/// cap from CPU cores, total RAM, and the file-descriptor limit; pass a
+	/// positive integer to override.
+	#[arg(long = "max_connections", value_name = "VALUE", default_value = "auto")]
+	pub max_connections: MaxConnections,
 }
 
 #[derive(Deserialize, Serialize, Educe)]
@@ -204,6 +210,11 @@ pub struct Config {
 	pub acl_engine: Option<std::sync::Arc<crate::acl::AclEngine>>,
 
 	pub experimental: ExperimentalConfig,
+
+	/// Maximum concurrent QUIC connections. Set from `Cli`, not the TOML
+	/// file — keeps the auto-resolution logic in one place (CLI/env).
+	#[serde(skip)]
+	pub max_connections: MaxConnections,
 
 	/// Old configuration fields (deprecated, kept for migration)
 	#[serde(default, skip_serializing, rename = "tls")]
@@ -425,6 +436,7 @@ pub async fn parse_config(cli: Cli) -> eyre::Result<Config> {
 	config.log_mode = cli.log_mode;
 	config.cert_file = cli.cert_file;
 	config.key_file = cli.key_file;
+	config.max_connections = cli.max_connections;
 
 	// Check if node_id is required (not in init mode)
 	let node_id = cli

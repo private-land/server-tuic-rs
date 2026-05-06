@@ -2675,7 +2675,7 @@ dependencies = [
 
 [[package]]
 name = "server-tuic-agent"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "acl-engine-rs",
  "anyhow",
@@ -2691,6 +2691,7 @@ dependencies = [
  "humantime-serde",
  "ip_network",
  "ipnet",
+ "libc",
  "moka",
  "panel-connect-rpc",
  "panel-core",
@@ -2886,7 +2887,7 @@ dependencies = [
 
 [[package]]
 name = "tests"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "aws-lc-rs",
  "eyre",
@@ -3323,7 +3324,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tuic-core"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "bytes",
  "eyre",
