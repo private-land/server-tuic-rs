@@ -19,7 +19,7 @@ jemallocator = ["tikv-jemallocator"]
 
 [dependencies]
 
-toml = "0.9"
+toml = "1.1"
 clap = { version = "4", features = ["derive"] }
 socket2 = { version = "0.6", default-features = false }
 libc = "0.2"
@@ -37,8 +37,8 @@ tuic = { package = "tuic-core", path = "../core", default-features = false, feat
 register-count = { version = "0.1.0", default-features = false, features = ["std"] }
 
 # Panel (server-panel-rs)
-panel-core = { git = "https://github.com/xflash-panda/server-panel-rs", tag = "v0.1.13" }
-panel-connect-rpc = { git = "https://github.com/xflash-panda/server-panel-rs", tag = "v0.1.13" }
+panel-core = { git = "https://github.com/xflash-panda/server-panel-rs", tag = "v0.1.15" }
+panel-connect-rpc = { git = "https://github.com/xflash-panda/server-panel-rs", tag = "v0.1.15" }
 server-client-rs = { git = "https://github.com/xflash-panda/server-client-rs", tag = "v0.1.15" }
 anyhow = "1"
 
