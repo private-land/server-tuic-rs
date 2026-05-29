@@ -205,8 +205,10 @@ where
 		};
 		let (_, _, _, _, _, addr) = pkt.into();
 
-		let frag_total = if first_frag_size < payload.as_ref().len() {
-			(1 + (payload.as_ref().len() - first_frag_size) / frag_size_addr_none + 1) as u8
+		let remaining = payload.as_ref().len().saturating_sub(first_frag_size);
+		let frag_total = if remaining > 0 {
+			let n = 1 + remaining.div_ceil(frag_size_addr_none);
+			n.min(u8::MAX as usize) as u8
 		} else {
 			1u8
 		};

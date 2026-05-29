@@ -13,7 +13,6 @@ use std::{
 };
 
 use parking_lot::Mutex;
-use register_count::{Counter, Register};
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -29,20 +28,18 @@ mod heartbeat;
 mod packet;
 
 pub use self::{
-	authenticate::{Authenticate, KeyingMaterialExporter},
+	authenticate::{Authenticate, ExportError, KeyingMaterialExporter},
 	connect::Connect,
 	dissociate::Dissociate,
 	heartbeat::Heartbeat,
 	packet::{Fragments, Packet},
 };
 
-/// An abstraction of a TUIC connection, with packet fragmentation management
-/// and task counters. No I/O operation is involved internally
+/// An abstraction of a TUIC connection, with packet fragmentation management.
+/// No I/O operation is involved internally
 #[derive(Clone)]
 pub struct Connection<B> {
-	udp_sessions:         Arc<Mutex<UdpSessions<B>>>,
-	task_connect_count:   Counter,
-	task_associate_count: Counter,
+	udp_sessions: Arc<Mutex<UdpSessions<B>>>,
 }
 
 impl<B> Connection<B>
@@ -52,12 +49,8 @@ where
 	/// Creates a new `Connection`
 	#[allow(clippy::new_without_default)]
 	pub fn new() -> Self {
-		let task_associate_count = Counter::new();
-
 		Self {
-			udp_sessions: Arc::new(Mutex::new(UdpSessions::new(task_associate_count.clone()))),
-			task_connect_count: Counter::new(),
-			task_associate_count,
+			udp_sessions: Arc::new(Mutex::new(UdpSessions::new())),
 		}
 	}
 
@@ -67,7 +60,7 @@ where
 		uuid: Uuid,
 		password: impl AsRef<[u8]>,
 		exporter: &impl KeyingMaterialExporter,
-	) -> Authenticate<side::Tx> {
+	) -> Result<Authenticate<side::Tx>, ExportError> {
 		Authenticate::<side::Tx>::new(uuid, password, exporter)
 	}
 
@@ -79,13 +72,13 @@ where
 
 	/// Sends a `Connect`
 	pub fn send_connect(&self, addr: Address) -> Connect<side::Tx> {
-		Connect::<side::Tx>::new(self.task_connect_count.reg(), addr)
+		Connect::<side::Tx>::new(addr)
 	}
 
 	/// Receives a `Connect`
 	pub fn recv_connect(&self, header: ConnectHeader) -> Connect<side::Rx> {
 		let (addr,) = header.into();
-		Connect::<side::Rx>::new(self.task_connect_count.reg(), addr)
+		Connect::<side::Rx>::new(addr)
 	}
 
 	/// Sends a `Packet`
@@ -137,16 +130,6 @@ where
 		Heartbeat::<side::Rx>::new()
 	}
 
-	/// Returns the number of `Connect` tasks
-	pub fn task_connect_count(&self) -> usize {
-		self.task_connect_count.count()
-	}
-
-	/// Returns the number of active UDP sessions
-	pub fn task_associate_count(&self) -> usize {
-		self.task_associate_count.count()
-	}
-
 	/// Removes fragments that can not be reassembled within the specified
 	/// timeout
 	pub fn collect_garbage(&self, timeout: Duration) {
@@ -161,8 +144,6 @@ where
 	fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
 		f.debug_struct("Connection")
 			.field("udp_sessions", &self.udp_sessions)
-			.field("task_connect_count", &self.task_connect_count())
-			.field("task_associate_count", &self.task_associate_count())
 			.finish()
 	}
 }
@@ -181,25 +162,23 @@ pub mod side {
 }
 
 struct UdpSessions<B> {
-	sessions:             HashMap<u16, UdpSession<B>>,
-	task_associate_count: Counter,
+	sessions: HashMap<u16, UdpSession<B>>,
 }
 
 impl<B> UdpSessions<B>
 where
 	B: AsRef<[u8]>,
 {
-	fn new(task_associate_count: Counter) -> Self {
+	fn new() -> Self {
 		Self {
 			sessions: HashMap::new(),
-			task_associate_count,
 		}
 	}
 
 	fn send_packet(&mut self, assoc_id: u16, addr: Address, max_pkt_size: usize) -> Packet<side::Tx, B> {
 		self.sessions
 			.entry(assoc_id)
-			.or_insert_with(|| UdpSession::new(self.task_associate_count.reg()))
+			.or_insert_with(UdpSession::new)
 			.send_packet(assoc_id, addr, max_pkt_size)
 	}
 
@@ -232,7 +211,7 @@ where
 	) -> Packet<side::Rx, B> {
 		self.sessions
 			.entry(assoc_id)
-			.or_insert_with(|| UdpSession::new(self.task_associate_count.reg()))
+			.or_insert_with(UdpSession::new)
 			.recv_packet(sessions, assoc_id, pkt_id, frag_total, frag_id, size, addr)
 	}
 
@@ -259,7 +238,7 @@ where
 	) -> Result<Option<Assemblable<B>>, AssembleError> {
 		self.sessions
 			.entry(assoc_id)
-			.or_insert_with(|| UdpSession::new(self.task_associate_count.reg()))
+			.or_insert_with(UdpSession::new)
 			.insert(assoc_id, pkt_id, frag_total, frag_id, size, addr, data)
 	}
 
@@ -282,18 +261,16 @@ where
 struct UdpSession<B> {
 	pkt_buf:     HashMap<u16, PacketBuffer<B>>,
 	next_pkt_id: AtomicU16,
-	_task_reg:   Register,
 }
 
 impl<B> UdpSession<B>
 where
 	B: AsRef<[u8]>,
 {
-	fn new(task_reg: Register) -> Self {
+	fn new() -> Self {
 		Self {
 			pkt_buf:     HashMap::new(),
 			next_pkt_id: AtomicU16::new(0),
-			_task_reg:   task_reg,
 		}
 	}
 

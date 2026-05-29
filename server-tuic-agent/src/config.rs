@@ -292,6 +292,9 @@ pub struct QuicConfig {
 	#[serde(with = "humantime_serde")]
 	#[educe(Default(expression = Duration::from_secs(30)))]
 	pub max_idle_time: Duration,
+
+	#[educe(Default = 1280)]
+	pub max_concurrent_streams: u32,
 }
 
 #[derive(Deserialize, Serialize, Educe, Clone)]
@@ -302,18 +305,6 @@ pub struct ExperimentalConfig {
 	pub drop_loopback: bool,
 	#[educe(Default = true)]
 	pub drop_private:  bool,
-}
-
-impl ExperimentalConfig {
-	const DEFAULT_CONCURRENT_STREAMS: u32 = 32;
-
-	pub fn max_concurrent_uni_streams(&self) -> u32 {
-		Self::DEFAULT_CONCURRENT_STREAMS
-	}
-
-	pub fn max_concurrent_bidi_streams(&self) -> u32 {
-		Self::DEFAULT_CONCURRENT_STREAMS
-	}
 }
 
 impl Config {
