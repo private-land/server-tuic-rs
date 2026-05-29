@@ -1,8 +1,5 @@
-use std::sync::atomic::Ordering;
-
 use bytes::Bytes;
-use quinn::{RecvStream, SendStream, VarInt};
-use register_count::Register;
+use quinn::{RecvStream, SendStream};
 use tokio::time;
 use tracing::debug;
 use tuic::quinn::Task;
@@ -11,30 +8,13 @@ use super::Connection;
 use crate::{error::Error, utils::UdpRelayMode};
 
 impl Connection {
-	pub async fn handle_uni_stream(self, recv: RecvStream, reg: Register) {
+	pub async fn handle_uni_stream(self, recv: RecvStream) {
 		debug!(
 			"[{id:#010x}] [{addr}] [{user}] incoming unidirectional stream",
 			id = self.id(),
 			addr = self.inner.remote_address(),
 			user = self.auth,
 		);
-
-		let current_max = self.max_concurrent_uni_streams.load(Ordering::Relaxed);
-
-		if self.remote_uni_stream_cnt.count() >= (current_max as f32 * 0.7) as usize
-			&& let Ok(_) = self.max_concurrent_uni_streams.compare_exchange(
-				current_max,
-				current_max * 2,
-				Ordering::AcqRel,
-				Ordering::Acquire,
-			) {
-			debug!(
-				"[{id:#010x}] reached max concurrent uni_streams, setting bigger limitation={num}",
-				id = self.id(),
-				num = current_max * 2
-			);
-			self.inner.set_max_concurrent_uni_streams(VarInt::from(current_max * 2));
-		}
 
 		let pre_process = async {
 			let task = time::timeout(self.ctx.cfg.task_negotiation_timeout, self.model.accept_uni_stream(recv))
@@ -77,33 +57,15 @@ impl Connection {
 				self.close();
 			}
 		}
-		drop(reg);
 	}
 
-	pub async fn handle_bi_stream(self, (send, recv): (SendStream, RecvStream), reg: Register) {
+	pub async fn handle_bi_stream(self, (send, recv): (SendStream, RecvStream)) {
 		debug!(
 			"[{id:#010x}] [{addr}] [{user}] incoming bidirectional stream",
 			id = self.id(),
 			addr = self.inner.remote_address(),
 			user = self.auth,
 		);
-
-		let current_max = self.max_concurrent_bi_streams.load(Ordering::Relaxed);
-
-		if self.remote_bi_stream_cnt.count() >= (current_max as f32 * 0.7) as usize
-			&& let Ok(_) = self.max_concurrent_bi_streams.compare_exchange(
-				current_max,
-				current_max * 2,
-				Ordering::AcqRel,
-				Ordering::Acquire,
-			) {
-			debug!(
-				"[{id:#010x}] reached max concurrent bi_streams, setting bigger limitation={num}",
-				id = self.id(),
-				num = current_max * 2
-			);
-			self.inner.set_max_concurrent_bi_streams(VarInt::from(current_max * 2));
-		}
 
 		let pre_process = async {
 			let task = time::timeout(self.ctx.cfg.task_negotiation_timeout, self.model.accept_bi_stream(send, recv))
@@ -134,7 +96,6 @@ impl Connection {
 				self.close();
 			}
 		}
-		drop(reg);
 	}
 
 	pub async fn handle_datagram(self, dg: Bytes) {

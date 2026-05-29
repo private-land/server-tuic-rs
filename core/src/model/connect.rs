@@ -1,7 +1,5 @@
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 
-use register_count::Register;
-
 use super::side::{self, Side};
 use crate::{Address, Connect as ConnectHeader, Header};
 
@@ -12,16 +10,14 @@ pub struct Connect<M> {
 }
 
 struct Tx {
-	header:    Header,
-	_task_reg: Register,
+	header: Header,
 }
 
 impl Connect<side::Tx> {
-	pub(super) fn new(task_reg: Register, addr: Address) -> Self {
+	pub(super) fn new(addr: Address) -> Self {
 		Self {
 			inner:   Side::Tx(Tx {
-				header:    Header::Connect(ConnectHeader::new(addr)),
-				_task_reg: task_reg,
+				header: Header::Connect(ConnectHeader::new(addr)),
 			}),
 			_marker: side::Tx,
 		}
@@ -42,17 +38,13 @@ impl Debug for Connect<side::Tx> {
 }
 
 struct Rx {
-	addr:      Address,
-	_task_reg: Register,
+	addr: Address,
 }
 
 impl Connect<side::Rx> {
-	pub(super) fn new(task_reg: Register, addr: Address) -> Self {
+	pub(super) fn new(addr: Address) -> Self {
 		Self {
-			inner:   Side::Rx(Rx {
-				addr,
-				_task_reg: task_reg,
-			}),
+			inner:   Side::Rx(Rx { addr }),
 			_marker: side::Rx,
 		}
 	}

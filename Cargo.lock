@@ -1975,12 +1975,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
-name = "register-count"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6d8b2af7d3e6675306d6757f10b4cf0b218a9fa6a0b44d668f2132684ae4893"
-
-[[package]]
 name = "reqwest"
 version = "0.12.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2386,7 +2380,7 @@ dependencies = [
 
 [[package]]
 name = "server-tuic-rs"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "acl-engine-rs",
  "anyhow",
@@ -2413,7 +2407,6 @@ dependencies = [
  "quinn-congestions",
  "rcgen",
  "regex",
- "register-count",
  "rustls",
  "rustls-pemfile",
  "serde",
@@ -2587,7 +2580,7 @@ dependencies = [
 
 [[package]]
 name = "tests"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "aws-lc-rs",
  "eyre",
@@ -3009,7 +3002,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tuic-core"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "bytes",
  "eyre",
@@ -3017,7 +3010,6 @@ dependencies = [
  "parking_lot",
  "quinn 0.12.0",
  "rcgen",
- "register-count",
  "rustls",
  "serde",
  "serde_json",

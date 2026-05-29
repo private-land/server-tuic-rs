@@ -6,7 +6,9 @@
 //!   - rustls + aws-lc-rs (AES-NI for AES-GCM ciphersuites) inside QUIC, plus
 //!     per-packet header protection / pacing / loss recovery
 //!   - Stream relay buffers 16+16 KB per active stream (`io::BUFFER_SIZE`)
-//!   - `INIT_CONCURRENT_STREAMS = 32` per connection (auto-doubled under load)
+//!   - `quic.max_concurrent_streams = 1280` per connection (fixed cap; Quinn
+//!     allocates per-stream state lazily, so the cap bounds the worst-case
+//!     rather than steady-state memory)
 //!   - Default `send_window = 16 MB`, `receive_window = 8 MB` (peak, not
 //!     steady)
 

@@ -14,7 +14,7 @@ repository.workspace = true
 [features]
 async_marshal = ["futures-util"]
 marshal = []
-model = ["parking_lot", "register-count"]
+model = ["parking_lot"]
 ring = ["rustls/ring", "tokio-rustls/ring"]
 aws-lc-rs = ["rustls/aws-lc-rs", "tokio-rustls/aws-lc-rs"]
 
@@ -23,7 +23,6 @@ aws-lc-rs = ["rustls/aws-lc-rs", "tokio-rustls/aws-lc-rs"]
 bytes = { version = "1", default-features = false, features = ["std"] }
 futures-util = { version = "0.3", default-features = false, features = ["io", "std"], optional = true }
 parking_lot = { version = "0.12", default-features = false, optional = true }
-register-count = { version = "0.1", default-features = false, features = ["std"], optional = true }
 thiserror = { version = "2", default-features = false }
 uuid = { version = "1", default-features = false, features = ["std"] }
 serde = { version = "1", default-features = false, features = ["derive", "std"] }
