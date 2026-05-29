@@ -1,12 +1,11 @@
 use std::{
 	collections::HashMap,
-	sync::{Arc, Weak, atomic::AtomicU32},
+	sync::{Arc, Weak},
 	time::Duration,
 };
 
 use arc_swap::ArcSwap;
 use quinn::{Connecting, Connection as QuinnConnection, VarInt};
-use register_count::Counter;
 use tokio::{sync::RwLock as AsyncRwLock, time};
 use tracing::debug;
 use tuic::quinn::{Authenticate, Connection as Model, side};
@@ -23,16 +22,12 @@ pub const ERROR_CODE: VarInt = VarInt::from_u32(0);
 
 #[derive(Clone)]
 pub struct Connection {
-	ctx: Arc<AppContext>,
-	inner: QuinnConnection,
-	model: Model<side::Server>,
-	auth: Authenticated,
-	udp_sessions: Arc<AsyncRwLock<HashMap<u16, Weak<UdpSession>>>>,
+	ctx:            Arc<AppContext>,
+	inner:          QuinnConnection,
+	model:          Model<side::Server>,
+	auth:           Authenticated,
+	udp_sessions:   Arc<AsyncRwLock<HashMap<u16, Weak<UdpSession>>>>,
 	udp_relay_mode: Arc<ArcSwap<Option<UdpRelayMode>>>,
-	remote_uni_stream_cnt: Counter,
-	remote_bi_stream_cnt: Counter,
-	max_concurrent_uni_streams: Arc<AtomicU32>,
-	max_concurrent_bi_streams: Arc<AtomicU32>,
 }
 
 impl Connection {
@@ -71,9 +66,9 @@ impl Connection {
 					let handle_incoming = async {
 						tokio::select! {
 							res = conn.inner.accept_uni() =>
-								tokio::spawn(conn.clone().handle_uni_stream(res?, conn.remote_uni_stream_cnt.reg())),
+								tokio::spawn(conn.clone().handle_uni_stream(res?)),
 							res = conn.inner.accept_bi() =>
-								tokio::spawn(conn.clone().handle_bi_stream(res?, conn.remote_bi_stream_cnt.reg())),
+								tokio::spawn(conn.clone().handle_bi_stream(res?)),
 							res = conn.inner.read_datagram() =>
 								tokio::spawn(conn.clone().handle_datagram(res?)),
 						};
@@ -107,8 +102,6 @@ impl Connection {
 	}
 
 	fn new(ctx: Arc<AppContext>, conn: QuinnConnection) -> Self {
-		let init_uni = ctx.cfg.experimental.max_concurrent_uni_streams();
-		let init_bidi = ctx.cfg.experimental.max_concurrent_bidi_streams();
 		Self {
 			ctx,
 			inner: conn.clone(),
@@ -116,10 +109,6 @@ impl Connection {
 			auth: Authenticated::new(),
 			udp_sessions: Arc::new(AsyncRwLock::new(HashMap::new())),
 			udp_relay_mode: Arc::new(ArcSwap::new(None.into())),
-			remote_uni_stream_cnt: Counter::new(),
-			remote_bi_stream_cnt: Counter::new(),
-			max_concurrent_uni_streams: Arc::new(AtomicU32::new(init_uni)),
-			max_concurrent_bi_streams: Arc::new(AtomicU32::new(init_bidi)),
 		}
 	}
 
