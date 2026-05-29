@@ -18,7 +18,7 @@ use self::side::Side;
 use crate::{
 	Address, Header, UnmarshalError,
 	model::{
-		AssembleError, Authenticate as AuthenticateModel, Connect as ConnectModel, Connection as ConnectionModel,
+		AssembleError, Authenticate as AuthenticateModel, Connect as ConnectModel, Connection as ConnectionModel, ExportError,
 		KeyingMaterialExporter as KeyingMaterialExporterImpl, Packet as PacketModel,
 		side::{Rx, Tx},
 	},
@@ -84,16 +84,6 @@ impl<Side> Connection<Side> {
 		Ok(())
 	}
 
-	/// Returns the number of `Connect` tasks
-	pub fn task_connect_count(&self) -> usize {
-		self.model.task_connect_count()
-	}
-
-	/// Returns the number of active UDP sessions
-	pub fn task_associate_count(&self) -> usize {
-		self.model.task_associate_count()
-	}
-
 	/// Removes packet fragments that can not be reassembled within the
 	/// specified timeout
 	pub fn collect_garbage(&self, timeout: Duration) {
@@ -117,7 +107,9 @@ impl Connection<side::Client> {
 
 	/// Sends an `Authenticate` command.
 	pub async fn authenticate(&self, uuid: Uuid, password: impl AsRef<[u8]>) -> eyre::Result<()> {
-		let model = self.model.send_authenticate(uuid, password, &self.keying_material_exporter());
+		let model = self
+			.model
+			.send_authenticate(uuid, password, &self.keying_material_exporter())?;
 
 		let mut send = self.conn.open_uni().await?;
 		model.header().async_marshal(&mut send).await?;
@@ -360,7 +352,11 @@ impl Authenticate {
 	}
 
 	/// Validates if the given password is matching the hashed token.
-	pub fn validate(&self, password: impl AsRef<[u8]>) -> bool {
+	///
+	/// Returns `Err(ExportError)` if the TLS keying material export fails — in
+	/// that case the caller MUST treat the request as unauthenticated rather
+	/// than falling back to any default token comparison.
+	pub fn validate(&self, password: impl AsRef<[u8]>) -> Result<bool, ExportError> {
 		self.model.is_valid(password, &self.exporter)
 	}
 }
@@ -528,13 +524,13 @@ pub enum Task {
 struct KeyingMaterialExporter(QuinnConnection);
 
 impl KeyingMaterialExporterImpl for KeyingMaterialExporter {
-	fn export_keying_material(&self, label: &[u8], context: &[u8]) -> [u8; 32] {
+	fn export_keying_material(&self, label: &[u8], context: &[u8]) -> Result<[u8; 32], ExportError> {
 		let mut buf = [0; 32];
-		if let Err(err) = self.0.export_keying_material(&mut buf, label, context) {
+		self.0.export_keying_material(&mut buf, label, context).map_err(|err| {
 			warn!("export keying material error {:#?}", err);
-			buf = [0; 32];
-		}
-		buf
+			ExportError
+		})?;
+		Ok(buf)
 	}
 }
 

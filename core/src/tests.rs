@@ -405,3 +405,48 @@ fn test_marshal_unmarshal_address_none() {
 		_ => panic!("Expected Packet header"),
 	}
 }
+
+#[cfg(feature = "model")]
+mod model_tests {
+	use crate::{Address, model::Connection};
+
+	/// Verify the fix for the exact-division edge case.
+	///
+	/// When the post-first-fragment remainder is evenly divisible by the
+	/// per-fragment payload size, the old formula overcounted by one and
+	/// produced an empty trailing fragment.
+	#[test]
+	fn test_fragment_count_exact_division() {
+		let conn = Connection::<Vec<u8>>::new();
+		let pkt = conn.send_packet(1, Address::DomainAddress("t.co".to_string(), 53), 50);
+		// first_frag = 50 - 18 = 32, frag_none = 50 - 11 = 39
+		// payload = 32 + 39 = 71 → remaining 39 exactly divisible by 39
+		// Old: 1 + 39/39 + 1 = 3, New: 1 + ceil(39/39) = 2
+		let payload = vec![0xCD; 71];
+		let fragments: Vec<_> = pkt.into_fragments(&payload).collect();
+
+		assert_eq!(fragments.len(), 2);
+		for (_, data) in &fragments {
+			assert!(!data.is_empty());
+		}
+		let total: usize = fragments.iter().map(|(_, d)| d.len()).sum();
+		assert_eq!(total, 71);
+	}
+
+	/// Verify that extremely large payloads clamp the fragment count to
+	/// `u8::MAX` instead of silently overflowing.
+	#[test]
+	fn test_fragment_count_overflow_clamp() {
+		let conn = Connection::<Vec<u8>>::new();
+		let pkt = conn.send_packet(1, Address::None, 20);
+		// Each fragment payload = 20 - 11 = 9 bytes.
+		// payload = 2314 → remaining = 2314 - 9 = 2305 → 1 + ceil(2305/9) = 258
+		// → clamped to 255.
+		let payload = vec![0xEE; 2314];
+		let fragments = pkt.into_fragments(&payload);
+		assert_eq!(fragments.len(), u8::MAX as usize);
+
+		let collected: Vec<_> = fragments.collect();
+		assert_eq!(collected.len(), u8::MAX as usize);
+	}
+}

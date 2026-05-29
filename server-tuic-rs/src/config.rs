@@ -258,6 +258,9 @@ pub struct QuicConfig {
 	#[serde(with = "humantime_serde")]
 	#[educe(Default(expression = Duration::from_secs(30)))]
 	pub max_idle_time: Duration,
+
+	#[educe(Default = 1280)]
+	pub max_concurrent_streams: u32,
 }
 
 #[derive(Deserialize, Serialize, Educe, Clone)]
