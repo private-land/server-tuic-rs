@@ -86,6 +86,18 @@ impl UdpSession {
 				let next;
 				tokio::select! {
 					recv = session_listening.recv() => next = recv,
+					// Parent QUIC connection dropped without a proper `UDP-DROP`: tear down
+					// immediately instead of lingering until `stream_timeout` (or forever, if
+					// the target keeps sending and resetting the timeout).
+					_ = session_listening.conn.inner.closed() => {
+						debug!(
+							"[{id:#010x}] [{addr}] [{user}] [packet] [{assoc_id:#06x}] parent connection closed, cleaning up",
+							id = session_listening.conn.id(),
+							addr = session_listening.conn.inner.remote_address(),
+							user = session_listening.conn.auth,
+						);
+						break;
+					},
 					// Avoid client didn't send `UDP-DROP` properly
 					_ = timeout.tick() => {
 						session_listening.close().await;
@@ -122,7 +134,13 @@ impl UdpSession {
 						.log_err(),
 				);
 			}
-			session_listening.conn.udp_sessions.write().await.remove(&assoc_id);
+			// Only drop our own map entry. If this assoc_id was re-used and replaced by a
+			// newer session while we were shutting down, leave that entry intact.
+			let self_weak = Arc::downgrade(&session_listening);
+			let mut sessions = session_listening.conn.udp_sessions.write().await;
+			if sessions.get(&assoc_id).is_some_and(|entry| entry.ptr_eq(&self_weak)) {
+				sessions.remove(&assoc_id);
+			}
 		};
 
 		tokio::spawn(listen);
