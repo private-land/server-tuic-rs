@@ -15,3 +15,6 @@ data/
 .cert/
 docs/plans/
 docs/superpowers/
+
+# Local agent design artifacts
+/.superpowers/
