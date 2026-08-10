@@ -35,9 +35,9 @@ quinn-congestions = { workspace = true }
 tuic = { package = "tuic-core", path = "../core", default-features = false, features = ["async_marshal", "marshal", "model"] }
 
 # Panel (server-panel-rs)
-panel-core = { git = "https://github.com/xflash-panda/server-panel-rs", tag = "v0.1.7" }
-panel-http = { git = "https://github.com/xflash-panda/server-panel-rs", tag = "v0.1.7" }
-server-client-rs = { git = "https://github.com/xflash-panda/server-client-rs", tag = "v0.1.12" }
+panel-core = { git = "https://github.com/xflash-panda/server-panel-rs", tag = "v0.1.19" }
+panel-http = { git = "https://github.com/xflash-panda/server-panel-rs", tag = "v0.1.19" }
+server-client-rs = { git = "https://github.com/xflash-panda/server-client-rs", tag = "v0.1.18" }
 anyhow = "1"
 
 # Tokio/Async
@@ -64,7 +64,7 @@ pest = "2.8"
 pest_derive = "2.8"
 
 # ACL Engine
-acl-engine-rs = { git = "https://github.com/xflash-panda/acl-engine-rs", tag = "v0.4.4" }
+acl-engine-rs = { git = "https://github.com/xflash-panda/acl-engine-rs", tag = "v0.4.5" }
 
 # DNS Cache
 dns-cache-rs = { git = "https://github.com/xflash-panda/dns-cache-rs.git", branch = "dev" }

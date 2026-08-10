@@ -1,7 +1,7 @@
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use panel_core::{BackgroundTasks, BackgroundTasksHandle, NodeConfigEnum, PanelApi, StatsCollector, TaskConfig, UserManager};
-use panel_http::{HttpApiManager, HttpPanelConfig};
+use panel_http::{HttpApiManager, HttpPanelConfig, IpVersion};
 use server_client_rs::models::TuicConfig;
 use tracing::{error, info, warn};
 use uuid::Uuid;
@@ -57,6 +57,7 @@ impl Panel {
 			api_timeout: config.timeout,
 			debug:       false,
 			data_dir:    config.data_dir.clone(),
+			ip_version:  IpVersion::default(),
 		};
 
 		let user_manager = Arc::new(UserManager::new(tuic_derive_key));
