@@ -37,7 +37,7 @@ impl Connection {
 		let init = async {
 			let conn = if ctx.cfg.zero_rtt_handshake {
 				match conn.into_0rtt() {
-					Ok((conn, _)) => conn,
+					Ok(conn) => conn,
 					Err(conn) => conn.await?,
 				}
 			} else {
