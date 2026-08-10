@@ -8,7 +8,7 @@
 
 use std::{any::Any, sync::Arc, time::Instant};
 
-use quinn::congestion::{Controller, ControllerFactory, ControllerMetrics};
+use quinn::congestion::{Controller, ControllerFactory, ControllerMetrics, SpaceId};
 use quinn_proto::RttEstimator;
 
 /// Wraps a [`ControllerFactory`] to produce [`SafePacingController`]s.
@@ -39,16 +39,33 @@ impl Controller for SafePacingController {
 		self.inner.on_sent(now, bytes, last_packet_number);
 	}
 
-	fn on_packet_sent(&mut self, now: Instant, bytes: u16, packet_number: u64) {
-		self.inner.on_packet_sent(now, bytes, packet_number);
+	fn on_packet_sent(&mut self, now: Instant, bytes: u16, packet_number: u64, space: SpaceId) {
+		self.inner.on_packet_sent(now, bytes, packet_number, space);
 	}
 
-	fn on_ack(&mut self, now: Instant, sent: Instant, bytes: u64, pn: u64, app_limited: bool, rtt: &RttEstimator) {
-		self.inner.on_ack(now, sent, bytes, pn, app_limited, rtt);
+	fn on_ack(
+		&mut self,
+		now: Instant,
+		sent: Instant,
+		bytes: u64,
+		pn: u64,
+		space: SpaceId,
+		app_limited: bool,
+		rtt: &RttEstimator,
+	) {
+		self.inner.on_ack(now, sent, bytes, pn, space, app_limited, rtt);
 	}
 
-	fn on_end_acks(&mut self, now: Instant, in_flight: u64, app_limited: bool, largest_packet_num_acked: Option<u64>) {
-		self.inner.on_end_acks(now, in_flight, app_limited, largest_packet_num_acked);
+	fn on_end_acks(
+		&mut self,
+		now: Instant,
+		in_flight: u64,
+		app_limited: bool,
+		largest_packet_num_acked: Option<u64>,
+		space: SpaceId,
+	) {
+		self.inner
+			.on_end_acks(now, in_flight, app_limited, largest_packet_num_acked, space);
 	}
 
 	fn on_congestion_event(
@@ -59,13 +76,14 @@ impl Controller for SafePacingController {
 		is_ecn: bool,
 		lost_bytes: u64,
 		largest_lost: u64,
+		space: SpaceId,
 	) {
 		self.inner
-			.on_congestion_event(now, sent, is_persistent_congestion, is_ecn, lost_bytes, largest_lost);
+			.on_congestion_event(now, sent, is_persistent_congestion, is_ecn, lost_bytes, largest_lost, space);
 	}
 
-	fn on_packet_lost(&mut self, lost_bytes: u16, packet_number: u64, now: Instant) {
-		self.inner.on_packet_lost(lost_bytes, packet_number, now);
+	fn on_packet_lost(&mut self, lost_bytes: u16, packet_number: u64, space: SpaceId, now: Instant) {
+		self.inner.on_packet_lost(lost_bytes, packet_number, space, now);
 	}
 
 	fn on_spurious_congestion_event(&mut self) {
@@ -165,7 +183,7 @@ mod tests {
 	}
 
 	impl Controller for MockController {
-		fn on_congestion_event(&mut self, _: Instant, _: Instant, _: bool, _: bool, _: u64, _: u64) {}
+		fn on_congestion_event(&mut self, _: Instant, _: Instant, _: bool, _: bool, _: u64, _: u64, _: SpaceId) {}
 
 		fn on_mtu_update(&mut self, _: u16) {}
 
