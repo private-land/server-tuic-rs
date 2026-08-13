@@ -1702,8 +1702,8 @@ checksum = "7c87def4c32ab89d880effc9e097653c8da5d6ef28e6b539d313baaacfbafcbe"
 
 [[package]]
 name = "panel-connect-rpc"
-version = "0.1.19"
-source = "git+https://github.com/xflash-panda/server-panel-rs?tag=v0.1.19#fa01351aa6ae02d4f738a4a3cf8f792b5c69ed85"
+version = "0.1.20"
+source = "git+https://github.com/xflash-panda/server-panel-rs?tag=v0.1.20#66c93f72f1c6ccfa7b72bb18df60edf5f64646c6"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1714,15 +1714,15 @@ dependencies = [
  "serde",
  "serde_json",
  "server-agent-proto-rs",
- "server-client-rs 0.1.18 (git+https://github.com/private-land/server-client-rs.git?tag=v0.1.18)",
+ "server-client-rs 0.1.19 (git+https://github.com/private-land/server-client-rs.git?tag=v0.1.19)",
  "tokio",
  "tracing",
 ]
 
 [[package]]
 name = "panel-core"
-version = "0.1.19"
-source = "git+https://github.com/xflash-panda/server-panel-rs?tag=v0.1.19#fa01351aa6ae02d4f738a4a3cf8f792b5c69ed85"
+version = "0.1.20"
+source = "git+https://github.com/xflash-panda/server-panel-rs?tag=v0.1.20#66c93f72f1c6ccfa7b72bb18df60edf5f64646c6"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -2514,8 +2514,8 @@ dependencies = [
 
 [[package]]
 name = "server-agent-proto-rs"
-version = "0.4.1"
-source = "git+https://github.com/private-land/server-agent-proto-rs.git?tag=v0.4.1#ca36cf8b76b34d15b0c167c914ffe42b65eda131"
+version = "0.4.2"
+source = "git+https://github.com/private-land/server-agent-proto-rs.git?tag=v0.4.2#e6c65f31c7ef7c75c41c4672b003758f00b674f0"
 dependencies = [
  "buffa",
  "buffa-types",
@@ -2524,34 +2524,6 @@ dependencies = [
  "http-body",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "server-client-rs"
-version = "0.1.18"
-source = "git+https://github.com/private-land/server-client-rs.git?tag=v0.1.18#8d867e6b94a52be9e68ba0f711dc6f5f6d883d80"
-dependencies = [
- "reqwest",
- "serde",
- "serde_json",
- "thiserror 2.0.20",
- "tokio",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "server-client-rs"
-version = "0.1.18"
-source = "git+https://github.com/xflash-panda/server-client-rs?tag=v0.1.18#8d867e6b94a52be9e68ba0f711dc6f5f6d883d80"
-dependencies = [
- "reqwest",
- "serde",
- "serde_json",
- "thiserror 2.0.20",
- "tokio",
- "tracing",
- "url",
 ]
 
 [[package]]
@@ -2569,8 +2541,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "server-client-rs"
+version = "0.1.19"
+source = "git+https://github.com/private-land/server-client-rs.git?tag=v0.1.19#4372e20d7f25d6ec4fd03afbdcf3480b5eb9f829"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "server-client-rs"
+version = "0.1.19"
+source = "git+https://github.com/xflash-panda/server-client-rs?tag=v0.1.19#4372e20d7f25d6ec4fd03afbdcf3480b5eb9f829"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
 name = "server-tuic-agent"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "acl-engine-rs",
  "anyhow",
@@ -2603,7 +2603,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "server-client-rs 0.1.18 (git+https://github.com/xflash-panda/server-client-rs?tag=v0.1.18)",
+ "server-client-rs 0.1.19 (git+https://github.com/xflash-panda/server-client-rs?tag=v0.1.19)",
  "socket2 0.6.5",
  "tempfile",
  "thiserror 2.0.20",
@@ -2804,7 +2804,7 @@ dependencies = [
 
 [[package]]
 name = "tests"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "aws-lc-rs",
  "eyre",
@@ -2813,7 +2813,7 @@ dependencies = [
  "lexopt",
  "rustls",
  "serial_test",
- "server-client-rs 0.1.18 (git+https://github.com/xflash-panda/server-client-rs?branch=dev)",
+ "server-client-rs 0.1.18",
  "server-tuic-agent",
  "tokio",
  "tracing",
@@ -3241,7 +3241,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tuic-core"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "bytes",
  "eyre",

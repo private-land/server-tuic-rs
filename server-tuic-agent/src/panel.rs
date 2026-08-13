@@ -66,6 +66,7 @@ impl Panel {
 			server_name:  config.server_name.clone(),
 			ca_cert_path: config.ca_cert_path.clone(),
 			ip_version:   config.ip_version,
+			version:      Some(env!("CARGO_PKG_VERSION").to_string()),
 		};
 
 		let api = Arc::new(ConnectRpcApiManager::new(rpc_config));
