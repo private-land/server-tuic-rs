@@ -58,6 +58,7 @@ impl Panel {
 			debug:       false,
 			data_dir:    config.data_dir.clone(),
 			ip_version:  IpVersion::default(),
+			version:     Some(env!("CARGO_PKG_VERSION").to_string()),
 		};
 
 		let user_manager = Arc::new(UserManager::new(tuic_derive_key));
